@@ -1,5 +1,6 @@
 package cz.cvut.fit.blazeva.app.control;
 
+import cz.cvut.fit.blazeva.app.model.Player;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GLCapabilities;
 
@@ -17,4 +18,5 @@ public class Model {
     public static int fbHeight = 600;
     public static long window;
 
+    public static Scenario scenario = new Scenario();
 }

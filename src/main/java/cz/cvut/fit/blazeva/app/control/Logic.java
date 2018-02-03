@@ -19,10 +19,10 @@ public class Logic {
     private static float shotSeparation = 0.8f;
     private static int shotMilliseconds = 80;
     private static int shotOpponentMilliseconds = 200;
-//    private static float straveThrusterAccFactor = 20.0f;
+    //    private static float straveThrusterAccFactor = 20.0f;
 //    private static float mainThrusterAccFactor = 50.0f;
     private static float maxShotLifetime = 30.0f;
-//    private static float maxParticleLifetime = 1.0f;
+    //    private static float maxParticleLifetime = 1.0f;
 //    private static float shotSize = 0.5f;
 //    private static float particleSize = 1.0f;
 //    private static final int explosionParticles = 60;
@@ -56,7 +56,7 @@ public class Logic {
         }
     }
 
-//    private FloatBuffer shotsVertices = BufferUtils.createFloatBuffer(6 * 6 * maxShots);
+    //    private FloatBuffer shotsVertices = BufferUtils.createFloatBuffer(6 * 6 * maxShots);
 //    private FloatBuffer particleVertices = BufferUtils.createFloatBuffer(6 * 6 * maxParticles);
     private FloatBuffer crosshairVertices = BufferUtils.createFloatBuffer(6 * 2);
 
@@ -148,8 +148,10 @@ public class Logic {
 //        if (keyDown[GLFW_KEY_S]) cam.linearAcc.fma(-mainThrusterAccFactor, cam.forward(tmp2));
 //        if (keyDown[GLFW_KEY_D]) cam.linearAcc.fma(straveThrusterAccFactor, cam.right(tmp2));
 //        if (keyDown[GLFW_KEY_A]) cam.linearAcc.fma(-straveThrusterAccFactor, cam.right(tmp2));
-        if (keyDown[GLFW_KEY_Q]) rotZ = -1.0f;
-        if (keyDown[GLFW_KEY_E]) rotZ = +1.0f;
+        if (keyDown[GLFW_KEY_LEFT]) Model.scenario.move(-1, 0);
+        if (keyDown[GLFW_KEY_RIGHT]) Model.scenario.move(1, 0);
+        if (keyDown[GLFW_KEY_UP]) Model.scenario.move(0, 1);
+        if (keyDown[GLFW_KEY_DOWN]) Model.scenario.move(0, -1);
 //        if (keyDown[GLFW_KEY_SPACE]) cam.linearAcc.fma(straveThrusterAccFactor, cam.up(tmp2));
 //        if (keyDown[GLFW_KEY_LEFT_CONTROL]) cam.linearAcc.fma(-straveThrusterAccFactor, cam.up(tmp2));
         if (rightMouseDown) {
@@ -168,7 +170,7 @@ public class Logic {
     /* Create all needed GL resources */
     public void initialize() throws IOException {
 //        createCubemapTexture();
-        createFullScreenQuad();
+//        createFullScreenQuad();
         program.initializePrograms();
         drawer.createEntities();
     }
@@ -596,12 +598,17 @@ public class Logic {
     }
 
     public void loop() {
-        while (!glfwWindowShouldClose(window)) {
-            glfwPollEvents();
-            glViewport(0, 0, fbWidth, fbHeight);
-            update();
-            render();
-            glfwSwapBuffers(window);
+        try {
+            while (!glfwWindowShouldClose(window)) {
+                glfwPollEvents();
+                glViewport(0, 0, fbWidth, fbHeight);
+                Thread.sleep(100);
+                update();
+                render();
+                glfwSwapBuffers(window);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 

@@ -5,7 +5,8 @@ public enum EntityType {
     ASTEROID(1),
     CUBEMAP(2),
     SHOT(3),
-    PARTICLE(4);
+    PARTICLE(4),
+    PLAYER(5);
 
     public static int numberOfEntityTypes = 7;
 
