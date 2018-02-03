@@ -1,12 +1,12 @@
 package cz.cvut.fit.blazeva.app.control;
 
-import cz.cvut.fit.blazeva.app.model.Asteroid;
 import cz.cvut.fit.blazeva.app.model.Ship;
 import cz.cvut.fit.blazeva.app.model.SpaceCamera;
+import cz.cvut.fit.blazeva.app.view.Drawer;
+import cz.cvut.fit.blazeva.app.view.Program;
 import cz.cvut.fit.blazeva.util.WavefrontMeshLoader;
 import org.joml.*;
 import org.lwjgl.BufferUtils;
-import org.lwjgl.PointerBuffer;
 
 import java.io.IOException;
 import java.lang.Math;
@@ -15,6 +15,7 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 import static cz.cvut.fit.blazeva.app.control.Model.*;
+import static cz.cvut.fit.blazeva.app.model.EntityType.*;
 import static cz.cvut.fit.blazeva.util.DemoUtils.ioResourceToByteBuffer;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.ARBSeamlessCubeMap.GL_TEXTURE_CUBE_MAP_SEAMLESS;
@@ -44,59 +45,9 @@ public class Logic {
     private static final int maxParticles = 4096;
     private static final int maxShots = 1024;
 
-
-    private int cubemapProgram;
-    private int cubemap_invViewProjUniform;
-
-    private int shipProgram;
-    private int ship_viewUniform;
-    private int ship_projUniform;
-    private int ship_modelUniform;
-
-    private int shotProgram;
-    private int shot_projUniform;
-
-    private int particleProgram;
-    private int particle_projUniform;
-
     private ByteBuffer quadVertices;
-    private WavefrontMeshLoader.Mesh ship;
-    private int shipPositionVbo;
-    private int shipNormalVbo;
     private WavefrontMeshLoader.Mesh sphere;
-    private WavefrontMeshLoader.Mesh asteroid;
-    private int asteroidPositionVbo;
-    private int asteroidNormalVbo;
-    private int shipCount = 128;
-    private int asteroidCount = 512;
-    private float maxAsteroidRadius = 20.0f;
-    private static float shipSpread = 1000.0f;
-    private static float shipRadius = 4.0f;
-    private Ship[] ships = new Ship[shipCount];
 
-    {
-        for (int i = 0; i < ships.length; i++) {
-            Ship ship = new Ship();
-            ship.x = (Math.random() - 0.5) * shipSpread;
-            ship.y = (Math.random() - 0.5) * shipSpread;
-            ship.z = (Math.random() - 0.5) * shipSpread;
-            ships[i] = ship;
-        }
-    }
-
-    private Asteroid[] asteroids = new Asteroid[asteroidCount];
-
-    {
-        for (int i = 0; i < asteroids.length; i++) {
-            Asteroid asteroid = new Asteroid();
-            float scale = (float) ((Math.random() * 0.5 + 0.5) * maxAsteroidRadius);
-            asteroid.x = (Math.random() - 0.5) * shipSpread;
-            asteroid.y = (Math.random() - 0.5) * shipSpread;
-            asteroid.z = (Math.random() - 0.5) * shipSpread;
-            asteroid.scale = scale;
-            asteroids[i] = asteroid;
-        }
-    }
 
     private Vector3d[] projectilePositions = new Vector3d[1024];
     private Vector4f[] projectileVelocities = new Vector4f[1024];
@@ -139,12 +90,15 @@ public class Logic {
     private Vector3f tmp4 = new Vector3f();
     private Matrix4f projMatrix = new Matrix4f();
     private Matrix4f viewMatrix = new Matrix4f();
-    private Matrix4f modelMatrix = new Matrix4f();
     private Matrix4f viewProjMatrix = new Matrix4f();
     private Matrix4f invViewMatrix = new Matrix4f();
     private Matrix4f invViewProjMatrix = new Matrix4f();
     private FloatBuffer matrixBuffer = BufferUtils.createFloatBuffer(16);
     private FrustumIntersection frustumIntersection = new FrustumIntersection();
+    private static float shipRadius = 4.0f;
+
+    private Program program = new Program();
+    private Drawer drawer = new Drawer();
 
 
     private void createFullScreenQuad() {
@@ -158,115 +112,9 @@ public class Logic {
         fv.put(-1.0f).put(-1.0f);
     }
 
-    private void createShip() throws IOException {
-        WavefrontMeshLoader loader = new WavefrontMeshLoader();
-        ship = loader.loadMesh("ship");
-        shipPositionVbo = glGenBuffers();
-        glBindBuffer(GL_ARRAY_BUFFER, shipPositionVbo);
-        glBufferData(GL_ARRAY_BUFFER, ship.positions, GL_STATIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        shipNormalVbo = glGenBuffers();
-        glBindBuffer(GL_ARRAY_BUFFER, shipNormalVbo);
-        glBufferData(GL_ARRAY_BUFFER, ship.normals, GL_STATIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-    }
-
-    private void createAsteroid() throws IOException {
-        WavefrontMeshLoader loader = new WavefrontMeshLoader();
-        asteroid = loader.loadMesh("asteroid");
-        asteroidPositionVbo = glGenBuffers();
-        glBindBuffer(GL_ARRAY_BUFFER, asteroidPositionVbo);
-        glBufferData(GL_ARRAY_BUFFER, asteroid.positions, GL_STATIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        asteroidNormalVbo = glGenBuffers();
-        glBindBuffer(GL_ARRAY_BUFFER, asteroidNormalVbo);
-        glBufferData(GL_ARRAY_BUFFER, asteroid.normals, GL_STATIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-    }
-
     private void createSphere() throws IOException {
         WavefrontMeshLoader loader = new WavefrontMeshLoader();
         sphere = loader.loadMesh("sphere");
-    }
-
-    private static int createShader(String resource, int type) throws IOException {
-        int shader = glCreateShader(type);
-        ByteBuffer source = ioResourceToByteBuffer("cz/cvut/fit/blazeva/shaders/" + resource, 1024);
-        PointerBuffer strings = BufferUtils.createPointerBuffer(1);
-        IntBuffer lengths = BufferUtils.createIntBuffer(1);
-        strings.put(0, source);
-        lengths.put(0, source.remaining());
-        glShaderSource(shader, strings, lengths);
-        glCompileShader(shader);
-        int compiled = glGetShaderi(shader, GL_COMPILE_STATUS);
-        String shaderLog = glGetShaderInfoLog(shader);
-        if (shaderLog != null && shaderLog.trim().length() > 0) {
-            System.err.println(shaderLog);
-        }
-        if (compiled == 0) {
-            throw new AssertionError("Could not compile shader");
-        }
-        return shader;
-    }
-
-    private static int createProgram(int vshader, int fshader) {
-        int program = glCreateProgram();
-        glAttachShader(program, vshader);
-        glAttachShader(program, fshader);
-        glLinkProgram(program);
-        int linked = glGetProgrami(program, GL_LINK_STATUS);
-        String programLog = glGetProgramInfoLog(program);
-        if (programLog != null && programLog.trim().length() > 0) {
-            System.err.println(programLog);
-        }
-        if (linked == 0) {
-            throw new AssertionError("Could not link program");
-        }
-        return program;
-    }
-
-    private void createCubemapProgram() throws IOException {
-        int vshader = createShader("cubemap.vs", GL_VERTEX_SHADER);
-        int fshader = createShader("cubemap.fs", GL_FRAGMENT_SHADER);
-        int program = createProgram(vshader, fshader);
-        glUseProgram(program);
-        int texLocation = glGetUniformLocation(program, "tex");
-        glUniform1i(texLocation, 0);
-        cubemap_invViewProjUniform = glGetUniformLocation(program, "invViewProj");
-        glUseProgram(0);
-        cubemapProgram = program;
-    }
-
-    private void createShipProgram() throws IOException {
-        int vshader = createShader("ship.vs", GL_VERTEX_SHADER);
-        int fshader = createShader("ship.fs", GL_FRAGMENT_SHADER);
-        int program = createProgram(vshader, fshader);
-        glUseProgram(program);
-        ship_viewUniform = glGetUniformLocation(program, "view");
-        ship_projUniform = glGetUniformLocation(program, "proj");
-        ship_modelUniform = glGetUniformLocation(program, "model");
-        glUseProgram(0);
-        shipProgram = program;
-    }
-
-    private void createParticleProgram() throws IOException {
-        int vshader = createShader("particle.vs", GL_VERTEX_SHADER);
-        int fshader = createShader("particle.fs", GL_FRAGMENT_SHADER);
-        int program = createProgram(vshader, fshader);
-        glUseProgram(program);
-        particle_projUniform = glGetUniformLocation(program, "proj");
-        glUseProgram(0);
-        particleProgram = program;
-    }
-
-    private void createShotProgram() throws IOException {
-        int vshader = createShader("shot.vs", GL_VERTEX_SHADER);
-        int fshader = createShader("shot.fs", GL_FRAGMENT_SHADER);
-        int program = createProgram(vshader, fshader);
-        glUseProgram(program);
-        shot_projUniform = glGetUniformLocation(program, "proj");
-        glUseProgram(0);
-        shotProgram = program;
     }
 
     private void createCubemapTexture() throws IOException {
@@ -311,21 +159,21 @@ public class Logic {
         frustumIntersection.set(viewProjMatrix);
 
         /* Update the background shader */
-        glUseProgram(cubemapProgram);
-        glUniformMatrix4fv(cubemap_invViewProjUniform, false, invViewProjMatrix.get(matrixBuffer));
+        glUseProgram(program.program(CUBEMAP));
+        glUniformMatrix4fv(program.invViewProjection(CUBEMAP), false, invViewProjMatrix.get(matrixBuffer));
 
         /* Update the ship shader */
-        glUseProgram(shipProgram);
-        glUniformMatrix4fv(ship_viewUniform, false, viewMatrix.get(matrixBuffer));
-        glUniformMatrix4fv(ship_projUniform, false, projMatrix.get(matrixBuffer));
+        glUseProgram(program.program(SHIP));
+        glUniformMatrix4fv(program.viewUniform(SHIP), false, viewMatrix.get(matrixBuffer));
+        glUniformMatrix4fv(program.projection(SHIP), false, projMatrix.get(matrixBuffer));
 
         /* Update the shot shader */
-        glUseProgram(shotProgram);
-        glUniformMatrix4fv(shot_projUniform, false, matrixBuffer);
+        glUseProgram(program.program(SHOT));
+        glUniformMatrix4fv(program.projection(SHOT), false, matrixBuffer);
 
         /* Update the particle shader */
-        glUseProgram(particleProgram);
-        glUniformMatrix4fv(particle_projUniform, false, matrixBuffer);
+        glUseProgram(program.program(PARTICLE));
+        glUniformMatrix4fv(program.projection(PARTICLE), false, matrixBuffer);
 
         updateControls();
 
@@ -366,12 +214,8 @@ public class Logic {
     public void initialize() throws IOException {
         createCubemapTexture();
         createFullScreenQuad();
-        createCubemapProgram();
-        createShipProgram();
-        createParticleProgram();
-        createShip();
-        createAsteroid();
-        createShotProgram();
+        program.initializePrograms();
+        drawer.createEntities();
         createSphere();
     }
 
@@ -402,7 +246,7 @@ public class Logic {
     }
 
     private void shootFromShip(long thisTime, int index) {
-        Ship ship = ships[index];
+        Ship ship = drawer.getShip(index);
         if (ship == null) {
             return;
         }
@@ -457,58 +301,11 @@ public class Logic {
     }
 
     private void drawCubemap() {
-        glUseProgram(cubemapProgram);
+        glUseProgram(program.program(CUBEMAP));
         glVertexPointer(2, GL_FLOAT, 0, quadVertices);
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 
-    private void drawShips() {
-        glUseProgram(shipProgram);
-        glBindBuffer(GL_ARRAY_BUFFER, shipPositionVbo);
-        glVertexPointer(3, GL_FLOAT, 0, 0);
-        glEnableClientState(GL_NORMAL_ARRAY);
-        glBindBuffer(GL_ARRAY_BUFFER, shipNormalVbo);
-        glNormalPointer(GL_FLOAT, 0, 0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        for (Ship ship : ships) {
-            if (ship == null)
-                continue;
-            float x = (float) (ship.x - cam.position.x);
-            float y = (float) (ship.y - cam.position.y);
-            float z = (float) (ship.z - cam.position.z);
-            if (frustumIntersection.testSphere(x, y, z, shipRadius)) {
-                modelMatrix.translation(x, y, z);
-                modelMatrix.scale(shipRadius);
-                glUniformMatrix4fv(ship_modelUniform, false, modelMatrix.get(matrixBuffer));
-                glDrawArrays(GL_TRIANGLES, 0, this.ship.numVertices);
-            }
-        }
-        glDisableClientState(GL_NORMAL_ARRAY);
-    }
-
-    private void drawAsteroids() {
-        glUseProgram(shipProgram);
-        glBindBuffer(GL_ARRAY_BUFFER, asteroidPositionVbo);
-        glVertexPointer(3, GL_FLOAT, 0, 0);
-        glEnableClientState(GL_NORMAL_ARRAY);
-        glBindBuffer(GL_ARRAY_BUFFER, asteroidNormalVbo);
-        glNormalPointer(GL_FLOAT, 0, 0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        for (Asteroid asteroid : asteroids) {
-            if (asteroid == null)
-                continue;
-            float x = (float) (asteroid.x - cam.position.x);
-            float y = (float) (asteroid.y - cam.position.y);
-            float z = (float) (asteroid.z - cam.position.z);
-            if (frustumIntersection.testSphere(x, y, z, asteroid.scale)) {
-                modelMatrix.translation(x, y, z);
-                modelMatrix.scale(asteroid.scale);
-                glUniformMatrix4fv(ship_modelUniform, false, modelMatrix.get(matrixBuffer));
-                glDrawArrays(GL_TRIANGLES, 0, this.asteroid.numVertices);
-            }
-        }
-        glDisableClientState(GL_NORMAL_ARRAY);
-    }
 
     private void drawParticles() {
         particleVertices.clear();
@@ -535,7 +332,7 @@ public class Logic {
         }
         particleVertices.flip();
         if (num > 0) {
-            glUseProgram(particleProgram);
+            glUseProgram(program.program(PARTICLE));
             glDepthMask(false);
             glEnable(GL_BLEND);
             glVertexPointer(4, GL_FLOAT, 6 * 4, particleVertices);
@@ -575,7 +372,7 @@ public class Logic {
         }
         shotsVertices.flip();
         if (num > 0) {
-            glUseProgram(shotProgram);
+            glUseProgram(program.program(SHOT));
             glDepthMask(false);
             glEnable(GL_BLEND);
             glVertexPointer(4, GL_FLOAT, 6 * 4, shotsVertices);
@@ -633,7 +430,7 @@ public class Logic {
 
     private void drawHudShotDirection() {
         glUseProgram(0);
-        Ship enemyShip = ships[shootingShip];
+        Ship enemyShip = drawer.getShip(shootingShip);
         if (enemyShip == null)
             return;
         Vector3d targetOrigin = tmp;
@@ -660,7 +457,7 @@ public class Logic {
 
     private void drawHudShip() {
         glUseProgram(0);
-        Ship enemyShip = ships[shootingShip];
+        Ship enemyShip = drawer.getShip(shootingShip);
         if (enemyShip == null)
             return;
         Vector3f targetOrigin = tmp2;
@@ -767,39 +564,39 @@ public class Logic {
                 continue;
             }
             /* Test against ships */
-            for (int r = 0; r < shipCount; r++) {
-                Ship ship = ships[r];
-                if (ship == null)
-                    continue;
-                if (broadphase(ship.x, ship.y, ship.z, this.ship.boundingSphereRadius, shipRadius, projectilePosition, newPosition)
-                        && narrowphase(this.ship.positions, ship.x, ship.y, ship.z, shipRadius, projectilePosition, newPosition, tmp, tmp2)) {
-                    emitExplosion(tmp, null);
-                    ships[r] = null;
-                    projectileVelocity.w = 0.0f;
-                    if (r == shootingShip) {
-                        for (int sr = 0; sr < shipCount; sr++) {
-                            if (ships[sr] != null) {
-                                shootingShip = sr;
-                                break;
-                            }
-                        }
-                    }
-                    continue projectiles;
-                }
-            }
+//            for (int r = 0; r < shipCount; r++) {
+//                Ship ship = ships[r];
+//                if (ship == null)
+//                    continue;
+//                if (broadphase(ship.x, ship.y, ship.z, this.ship.boundingSphereRadius, shipRadius, projectilePosition, newPosition)
+//                        && narrowphase(this.ship.positions, ship.x, ship.y, ship.z, shipRadius, projectilePosition, newPosition, tmp, tmp2)) {
+//                    emitExplosion(tmp, null);
+//                    ships[r] = null;
+//                    projectileVelocity.w = 0.0f;
+//                    if (r == shootingShip) {
+//                        for (int sr = 0; sr < shipCount; sr++) {
+//                            if (ships[sr] != null) {
+//                                shootingShip = sr;
+//                                break;
+//                            }
+//                        }
+//                    }
+//                    continue projectiles;
+//                }
+//            }
             /* Test against asteroids */
-            for (int r = 0; r < asteroidCount; r++) {
-                Asteroid asteroid = asteroids[r];
-                if (asteroid == null) {
-                    continue;
-                }
-                if (broadphase(asteroid.x, asteroid.y, asteroid.z, this.asteroid.boundingSphereRadius, asteroid.scale, projectilePosition, newPosition)
-                        && narrowphase(this.asteroid.positions, asteroid.x, asteroid.y, asteroid.z, asteroid.scale, projectilePosition, newPosition, tmp, tmp2)) {
-                    emitExplosion(tmp, tmp2);
-                    projectileVelocity.w = 0.0f;
-                    continue projectiles;
-                }
-            }
+//            for (int r = 0; r < asteroidCount; r++) {
+//                Asteroid asteroid = asteroids[r];
+//                if (asteroid == null) {
+//                    continue;
+//                }
+//                if (broadphase(asteroid.x, asteroid.y, asteroid.z, this.asteroid.boundingSphereRadius, asteroid.scale, projectilePosition, newPosition)
+//                        && narrowphase(this.asteroid.positions, asteroid.x, asteroid.y, asteroid.z, asteroid.scale, projectilePosition, newPosition, tmp, tmp2)) {
+//                    emitExplosion(tmp, tmp2);
+//                    projectileVelocity.w = 0.0f;
+//                    continue projectiles;
+//                }
+//            }
             projectilePosition.set(newPosition);
         }
     }
@@ -840,8 +637,7 @@ public class Logic {
 
     private void render() {
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-        drawShips();
-        drawAsteroids();
+        drawer.draw(program, cam, matrixBuffer);
         drawCubemap();
         drawShots();
         drawParticles();
