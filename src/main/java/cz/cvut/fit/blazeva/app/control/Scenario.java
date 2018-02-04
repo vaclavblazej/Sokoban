@@ -12,8 +12,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import static cz.cvut.fit.blazeva.util.DemoUtils.ioResourceToByteBuffer;
-
 public class Scenario {
 
     public enum TileTypes {
@@ -34,14 +32,13 @@ public class Scenario {
     public Scenario(String name) {
         won = false;
         try {
-            URL url = Thread.currentThread().getContextClassLoader().getResource("cz/cvut/fit/blazeva/levels/" + name);
+            URL url = Scenario.class.getClassLoader().getResource("cz/cvut/fit/blazeva/levels/" + name);
             System.out.println("loading scenario " + name);
             File file = new File(url.getFile());
             try (BufferedReader br = new BufferedReader(new FileReader(file))) {
                 String line;
                 line = br.readLine();
                 size = Integer.parseInt(line);
-                System.out.println("map size: " + size);
                 map = new TileTypes[size][size];
                 for (int j = size-1; j >= 0 && (line = br.readLine()) != null; --j) {
                     for (int i = 0; i < line.length(); ++i) {

@@ -1,6 +1,6 @@
 # Simple sokoban puzzle game
 
-As a demonstration of simplistic game with **lwjgl**.
+As a demonstration of a simplistic game with **lwjgl**.
 
 ## Description 
 Each map is played on a round-like manner on a rectangular grid.
@@ -13,9 +13,14 @@ Use **Arrow** keys to move, use **R** to reset the level.
 What is complete:
 * described play mechanics
 * player controls
-* win condition
+* win conditiono 
 * several maps
 
-What will be ommited
+What was ommited
 * menu
 * settings
+
+## Picture
+
+<img alt="Nový sloupec hodnocení" src="./pics/example.png"/>
+

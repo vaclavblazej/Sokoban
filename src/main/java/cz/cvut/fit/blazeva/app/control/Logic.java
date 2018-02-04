@@ -181,7 +181,7 @@ public class Logic {
     public void initialize() throws IOException {
 //        createCubemapTexture();
 //        createFullScreenQuad();
-        program.initializePrograms();
+//        program.initializePrograms();
         drawer.createEntities();
     }
 

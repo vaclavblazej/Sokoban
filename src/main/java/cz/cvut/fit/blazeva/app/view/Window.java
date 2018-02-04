@@ -124,7 +124,7 @@ public class Window {
         if (!Model.caps.OpenGL20) {
             throw new AssertionError("This demo requires OpenGL 2.0.");
         }
-        debugProc = GLUtil.setupDebugMessageCallback();
+//        debugProc = GLUtil.setupDebugMessageCallback();
 
         logic.initialize();
 
