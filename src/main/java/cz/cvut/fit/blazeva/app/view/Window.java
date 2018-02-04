@@ -83,6 +83,9 @@ public class Window {
                 if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
                     glfwSetWindowShouldClose(window, true);
                 }
+                if(action == GLFW_PRESS){
+                    Model.keyTapped[key] = true;
+                }
                 if (action == GLFW_PRESS || action == GLFW_REPEAT) {
                     Model.keyDown[key] = true;
                 } else {

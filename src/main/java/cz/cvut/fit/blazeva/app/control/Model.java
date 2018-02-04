@@ -1,12 +1,12 @@
 package cz.cvut.fit.blazeva.app.control;
 
-import cz.cvut.fit.blazeva.app.model.Player;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GLCapabilities;
 
 public class Model {
 
     public static boolean[] keyDown = new boolean[GLFW.GLFW_KEY_LAST];
+    public static boolean[] keyTapped = new boolean[GLFW.GLFW_KEY_LAST];
     public static boolean leftMouseDown = false;
     public static boolean rightMouseDown = false;
     public static float mouseX = 0.0f;

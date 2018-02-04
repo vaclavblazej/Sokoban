@@ -141,6 +141,12 @@ public class Logic {
 //        shootFromShip(thisTime, shootingShip);
     }
 
+    private boolean keyTapped(int keycode) {
+        final boolean b = Model.keyTapped[keycode];
+        Model.keyTapped[keycode] = false;
+        return b;
+    }
+
     private void updateControls() {
 //        cam.linearAcc.zero();
         float rotZ = 0.0f;
@@ -148,10 +154,10 @@ public class Logic {
 //        if (keyDown[GLFW_KEY_S]) cam.linearAcc.fma(-mainThrusterAccFactor, cam.forward(tmp2));
 //        if (keyDown[GLFW_KEY_D]) cam.linearAcc.fma(straveThrusterAccFactor, cam.right(tmp2));
 //        if (keyDown[GLFW_KEY_A]) cam.linearAcc.fma(-straveThrusterAccFactor, cam.right(tmp2));
-        if (keyDown[GLFW_KEY_LEFT]) Model.scenario.move(-1, 0);
-        if (keyDown[GLFW_KEY_RIGHT]) Model.scenario.move(1, 0);
-        if (keyDown[GLFW_KEY_UP]) Model.scenario.move(0, 1);
-        if (keyDown[GLFW_KEY_DOWN]) Model.scenario.move(0, -1);
+        if (keyTapped(GLFW_KEY_LEFT)) Model.scenario.move(-1, 0);
+        if (keyTapped(GLFW_KEY_RIGHT)) Model.scenario.move(1, 0);
+        if (keyTapped(GLFW_KEY_UP)) Model.scenario.move(0, 1);
+        if (keyTapped(GLFW_KEY_DOWN)) Model.scenario.move(0, -1);
 //        if (keyDown[GLFW_KEY_SPACE]) cam.linearAcc.fma(straveThrusterAccFactor, cam.up(tmp2));
 //        if (keyDown[GLFW_KEY_LEFT_CONTROL]) cam.linearAcc.fma(-straveThrusterAccFactor, cam.up(tmp2));
         if (rightMouseDown) {

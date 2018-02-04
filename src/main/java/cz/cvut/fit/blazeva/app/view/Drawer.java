@@ -210,7 +210,7 @@ public class Drawer {
 
     private void drawPlayer() {
         final Player player = Model.scenario.player;
-        drawRect(player.x, player.y, 1, 0.2f);
+        drawRect(player.x, player.y, 1, 0.3f);
     }
 
     private void drawAll() {
@@ -219,24 +219,23 @@ public class Drawer {
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 switch (scenario.map[i][j]) {
-                    case BOX:
-                        glColor4f(0.8f, 0.8f, 0, 1);
-                        drawRect(i, j, 1, 0.2f);
-                        break;
                     case WALL:
                         glColor4f(0.8f, 0, 0, 1);
                         drawRect(i, j, 1, 0f);
                         break;
+                    case BOX:
+                        glColor4f(0.8f, 0.8f, 0, 1);
+                        drawRect(i, j, 1, 0.2f);
                     case EMPTY:
                         glColor4f(1, 1, 1, 0.8f);
-                        drawRect(i, j, 1, 0.1f);
+                        drawRect(i, j, 1, 0.05f);
                         break;
                 }
             }
         }
         for (Goal goal : scenario.goals) {
             glColor4f(0, 1, 0, 0.8f);
-            drawRect(goal.x, goal.y, 1, 0.2f);
+            drawRect(goal.x, goal.y, 1, 0.1f);
         }
         glColor4f(1f, 1f, 0.4f, 1);
         if(scenario.won){
