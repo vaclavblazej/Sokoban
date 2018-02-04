@@ -28,7 +28,7 @@ compile with maven
     
 run as jar file
 
-    java -jar target/sokoban-1.0-SNAPSHOT.jar
+    java -jar target/sokoban.jar
 
 ## Picture
 
