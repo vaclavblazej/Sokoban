@@ -18,5 +18,22 @@ public class Model {
     public static int fbHeight = 600;
     public static long window;
 
-    public static Scenario scenario = new Scenario();
+    public static int level = 0;
+    public static int maxLevel = 11;
+
+    public static void loadNextScenario() {
+        level++;
+        if (level <= maxLevel) {
+            scenario = new Scenario(level + ".txt");
+        } else {
+            System.out.println("YOU WON");
+            scenario.won = false;
+        }
+    }
+
+    public static Scenario scenario;
+
+    static {
+        loadNextScenario();
+    }
 }

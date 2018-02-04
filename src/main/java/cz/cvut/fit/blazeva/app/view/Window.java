@@ -70,12 +70,6 @@ public class Window {
             }
         });
 
-        System.out.println("Press W/S to move forward/backward");
-        System.out.println("Press L.Ctrl/Spacebar to move down/up");
-        System.out.println("Press A/D to strafe left/right");
-        System.out.println("Press Q/E to roll left/right");
-        System.out.println("Hold the left mouse button to shoot");
-        System.out.println("Hold the right mouse button to rotate towards the mouse cursor");
         glfwSetKeyCallback(window, keyCallback = new GLFWKeyCallback() {
             public void invoke(long window, int key, int scancode, int action, int mods) {
                 if (key == GLFW_KEY_UNKNOWN)

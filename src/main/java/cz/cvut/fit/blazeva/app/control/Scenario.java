@@ -3,8 +3,16 @@ package cz.cvut.fit.blazeva.app.control;
 import cz.cvut.fit.blazeva.app.model.Goal;
 import cz.cvut.fit.blazeva.app.model.Player;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+
+import static cz.cvut.fit.blazeva.util.DemoUtils.ioResourceToByteBuffer;
 
 public class Scenario {
 
@@ -12,29 +20,59 @@ public class Scenario {
         BOX, WALL, EMPTY;
     }
 
-    public int size = 10;
-    public boolean won = false;
+    public int size;
+    public boolean won;
 
-    public TileTypes[][] map = new TileTypes[size][size];
-
-    {
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                map[i][j] = i == 0 || i == size - 1 || j == 0 || j == size - 1 ? TileTypes.WALL : TileTypes.EMPTY;
-            }
-        }
-        map[3][3] = map[2][2] = TileTypes.BOX;
-        map[4][5] = TileTypes.WALL;
-    }
+    public TileTypes[][] map;
 
     public List<Goal> goals = new ArrayList<>();
-    {
-        goals.add(new Goal(2, 3));
-        goals.add(new Goal(4, 3));
-    }
+
 
     public Player player = new Player();
 
+
+    public Scenario(String name) {
+        won = false;
+        try {
+            URL url = Thread.currentThread().getContextClassLoader().getResource("cz/cvut/fit/blazeva/levels/" + name);
+            System.out.println("loading scenario " + name);
+            File file = new File(url.getFile());
+            try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+                String line;
+                line = br.readLine();
+                size = Integer.parseInt(line);
+                System.out.println("map size: " + size);
+                map = new TileTypes[size][size];
+                for (int j = size-1; j >= 0 && (line = br.readLine()) != null; --j) {
+                    for (int i = 0; i < line.length(); ++i) {
+                        switch (line.charAt(i)) {
+                            case 'W': // wall
+                                map[i][j] = TileTypes.WALL;
+                                break;
+                            case 'b': // box
+                                map[i][j] = TileTypes.BOX;
+                                break;
+                            case 'g': // goal
+                                goals.add(new Goal(i, j));
+                                map[i][j] = TileTypes.EMPTY;
+                                break;
+                            case 'p': // player
+                                player.x = i;
+                                player.y = j;
+                                map[i][j] = TileTypes.EMPTY;
+                                break;
+                            case '-': // empty space
+                                map[i][j] = TileTypes.EMPTY;
+                                break;
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("ERROR LOADING LEVEL");
+        }
+    }
 
     private boolean moveAll(int x, int y, int dx, int dy) {
         switch (map[x][y]) {
@@ -66,9 +104,9 @@ public class Scenario {
         }
         int finished = 0;
         for (Goal goal : goals) {
-            if(map[goal.x][goal.y] == TileTypes.BOX) finished++;
+            if (map[goal.x][goal.y] == TileTypes.BOX) finished++;
         }
-        if(finished == goals.size()){
+        if (finished == goals.size()) {
             won = true;
         }
     }

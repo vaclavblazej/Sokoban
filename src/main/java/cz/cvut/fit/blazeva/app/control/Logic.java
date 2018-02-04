@@ -158,6 +158,10 @@ public class Logic {
         if (keyTapped(GLFW_KEY_RIGHT)) Model.scenario.move(1, 0);
         if (keyTapped(GLFW_KEY_UP)) Model.scenario.move(0, 1);
         if (keyTapped(GLFW_KEY_DOWN)) Model.scenario.move(0, -1);
+        if (keyTapped(GLFW_KEY_R)) {
+            Model.level--;
+            Model.loadNextScenario();
+        }
 //        if (keyDown[GLFW_KEY_SPACE]) cam.linearAcc.fma(straveThrusterAccFactor, cam.up(tmp2));
 //        if (keyDown[GLFW_KEY_LEFT_CONTROL]) cam.linearAcc.fma(-straveThrusterAccFactor, cam.up(tmp2));
         if (rightMouseDown) {
@@ -608,7 +612,7 @@ public class Logic {
             while (!glfwWindowShouldClose(window)) {
                 glfwPollEvents();
                 glViewport(0, 0, fbWidth, fbHeight);
-                Thread.sleep(100);
+                Thread.sleep(80);
                 update();
                 render();
                 glfwSwapBuffers(window);

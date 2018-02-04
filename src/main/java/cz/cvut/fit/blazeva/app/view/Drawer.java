@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.FloatBuffer;
 
 import static cz.cvut.fit.blazeva.app.control.Model.height;
+import static cz.cvut.fit.blazeva.app.control.Model.loadNextScenario;
 import static cz.cvut.fit.blazeva.app.control.Model.width;
 import static cz.cvut.fit.blazeva.app.model.EntityType.PARTICLE;
 import static cz.cvut.fit.blazeva.app.model.EntityType.SHIP;
@@ -143,7 +144,7 @@ public class Drawer {
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 //        drawAsteroids(program, matrixBuffer);
 //        drawShips(program, matrixBuffer);
-        drawVelocityCompass();
+        drawAllObjects();
     }
 
     private void drawAsteroids(Program program, FloatBuffer matrixBuffer) {
@@ -239,12 +240,12 @@ public class Drawer {
         }
         glColor4f(1f, 1f, 0.4f, 1);
         if(scenario.won){
-            System.out.println("YOU WON!");
+            loadNextScenario();
         }
         drawPlayer();
     }
 
-    private void drawVelocityCompass() {
+    private void drawAllObjects() {
         glUseProgram(0);
         glEnable(GL_BLEND);
 //        glVertexPointer(3, GL_FLOAT, 0, sphere.positions);
