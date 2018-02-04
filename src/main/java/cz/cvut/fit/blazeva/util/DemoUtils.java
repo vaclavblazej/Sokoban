@@ -169,6 +169,30 @@ public class DemoUtils {
         return buffer;
     }
 
+    public static BufferedReader ioResourceToBufferedReader(String resource) throws IOException {
+		BufferedReader reader;
+        URL url = Thread.currentThread().getContextClassLoader().getResource(resource);
+		System.out.println("loading " + resource);
+		File file = new File(url.getFile());
+        if (file.isFile()) {
+            FileInputStream fis = new FileInputStream(file);
+            FileChannel fc = fis.getChannel();
+            reader = new BufferedReader(new InputStreamReader(fis));
+//            fc.close();
+//            fis.close();
+        } else {
+            InputStream source = url.openStream();
+            if (source == null)
+                throw new FileNotFoundException(resource);
+//            try {
+				reader = new BufferedReader(new InputStreamReader(source));
+//            } finally {
+//                source.close();
+//            }
+        }
+        return reader;
+    }
+
 	/**
 	 * Create a shader object from the given classpath resource.
 	 *

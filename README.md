@@ -20,6 +20,16 @@ What was ommited
 * menu
 * settings
 
+## Build
+
+compile with maven
+
+    mvn clean package
+    
+run as jar file
+
+    java -jar target/sokoban-1.0-SNAPSHOT.jar
+
 ## Picture
 
 <img alt="Nový sloupec hodnocení" src="./pics/example.png"/>

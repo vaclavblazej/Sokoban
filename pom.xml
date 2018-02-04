@@ -199,7 +199,7 @@
                                     <mainClass>cz.cvut.fit.blazeva.${class}</mainClass>
                                 </transformer>
                             </transformers>
-                            <!--<finalName>sokoban</finalName>-->
+                            <finalName>sokoban</finalName>
                         </configuration>
                     </execution>
                 </executions>
